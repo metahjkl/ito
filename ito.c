@@ -14,16 +14,19 @@ struct termios orig_termios;
 
 /*** terminal ***/
 void die(const char *s) {
+	write(STDOUT_FILENO, "\x1b[2J", 4);
+	write(STDOUT_FILENO, "\x1b[H", 3);
+
 	perror(s);
 	exit(1);
 }
 
-void disableRawMode() {
+void disableRawMode(void) {
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
 		die("tcsetattr");
 }
 
-void enableRawMode() {
+void enableRawMode(void) {
 	if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
 		die("tcgetattr");
 	atexit(disableRawMode);
@@ -39,7 +42,7 @@ void enableRawMode() {
 		die("tcdetattr");
 }
 
-char editorReadKey() {
+char editorReadKey(void) {
 	int nread;
 	char c;
 	while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
@@ -50,23 +53,26 @@ char editorReadKey() {
 }
 
 /*** output ***/
-void editorRefreshScreen() {
+void editorRefreshScreen(void) {
 	write(STDOUT_FILENO, "\x1b[2J", 4);
+	write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
 /*** input ***/
-void editorProcessKeyPress() {
+void editorProcessKeyPress(void) {
 	char c = editorReadKey();
 
 	switch (c) {
 		case CTRL_KEY('q'):
+			write(STDOUT_FILENO, "\x1b[2J", 4);
+			write(STDOUT_FILENO, "\x1b[H", 3);
 			exit(0);
 			break;
 	}
 }
 
 /*** init ***/
-int main() {
+int main(void) {
 	enableRawMode();
 
 	while (1) {
